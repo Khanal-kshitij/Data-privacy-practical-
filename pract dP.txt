@@ -1,0 +1,739 @@
+
+User attachment
+Code for these practical
+Data Privacy and Cyber Security Practicals – Python Programs
+
+Below are the solutions for all 10 practicals from your Data Privacy practical list.
+
+I have kept the programs:
+
+    Simple and easy to understand.
+
+    Suitable for college practical files.
+
+    Written in Python.
+
+    With comments and sample output wherever applicable.
+
+For each practical, you can use the following format in your practical notebook: Aim, Program, Output and Result.
+Practical 1: Caesar Cipher (Encryption and Decryption)
+
+Aim: Write a Python program to perform encryption and decryption using the Caesar substitution cipher.
+
+Program:
+
+def encrypt(text, shift):
+    result = ""
+
+    for char in text:
+        if char.isupper():
+            result += chr((ord(char) - 65 + shift) % 26 + 65)
+        elif char.islower():
+            result += chr((ord(char) - 97 + shift) % 26 + 97)
+        else:
+            result += char
+
+    return result
+
+
+def decrypt(text, shift):
+    return encrypt(text, -shift)
+
+
+message = input("Enter message: ")
+shift = int(input("Enter shift value: "))
+
+encrypted = encrypt(message, shift)
+decrypted = decrypt(encrypted, shift)
+
+print("Encrypted Message:", encrypted)
+print("Decrypted Message:", decrypted)
+
+Output:
+Enter message: HELLO
+Enter shift value: 3
+Encrypted Message: KHOOR
+Decrypted Message: HELLO
+
+Result: Successfully performed encryption and decryption using Caesar Cipher.
+Practical 2: Rail Fence Cipher (Encryption and Decryption)
+
+Aim: Write a Python program to perform encryption and decryption using the Rail Fence transposition cipher.
+
+Program:
+
+def encrypt(text, rails):
+    fence = [['\n' for _ in range(len(text))]
+             for _ in range(rails)]
+
+    row = 0
+    direction = 1
+
+    for col, char in enumerate(text):
+        fence[row][col] = char
+
+        if row == 0:
+            direction = 1
+        elif row == rails - 1:
+            direction = -1
+
+        row += direction
+
+    result = ""
+
+    for r in range(rails):
+        for c in range(len(text)):
+            if fence[r][c] != '\n':
+                result += fence[r][c]
+
+    return result
+
+
+def decrypt(cipher, rails):
+    if rails == 1:
+        return cipher
+
+    pattern = [['\n' for _ in range(len(cipher))]
+               for _ in range(rails)]
+
+    row = 0
+
+Output:
+Enter message: HELLOWORLD
+Enter number of rails: 3
+Encrypted Message: HOLELWRDLO
+Decrypted Message: HELLOWORLD
+
+Result: Successfully performed encryption and decryption using Rail Fence Cipher.
+Practical 3: SHA-256 Password Hashing
+
+Aim: Write a Python program that takes a password as input and returns its SHA-256 hashed representation as a hexadecimal string.
+
+Program:
+
+import hashlib
+
+def hash_password(password):
+    result = hashlib.sha256(password.encode())
+    return result.hexdigest()
+
+
+password = input("Enter password: ")
+
+hashed_password = hash_password(password)
+
+print("Original Password:", password)
+print("SHA-256 Hash:", hashed_password)
+
+Output (illustrative):
+Enter password: hello123
+
+SHA-256 Hash:
+<64-character hexadecimal hash>
+
+Result: Successfully generated the SHA-256 hash of a password.
+
+Note: SHA-256 is a one-way hashing algorithm, not encryption. Real password storage should use Argon2id, bcrypt or scrypt with unique salts rather than plain SHA-256.
+Practical 4: Check Leaked Passwords Using Have I Been Pwned API
+
+Aim: Write a Python program that reads usernames and passwords from a file and checks whether passwords have appeared in known data breaches.
+
+Step 1: Create a file named passwords.txt
+user1,password123
+user2,hello123
+user3,admin123
+
+Step 2: Install requests
+
+pip install requests
+
+Program:
+
+import hashlib
+import requests
+
+def check_password(password):
+    sha1_hash = hashlib.sha1(
+        password.encode("utf-8")
+    ).hexdigest().upper()
+
+    prefix = sha1_hash[:5]
+    suffix = sha1_hash[5:]
+
+    url = "https://api.pwnedpasswords.com/range/" + prefix
+
+    headers = {
+        "Add-Padding": "true"
+    }
+
+    response = requests.get(url, headers=headers, timeout=10)
+
+    if response.status_code != 200:
+        print("API Error:", response.status_code)
+        return None
+
+    for line in response.text.splitlines():
+        hash_suffix, count = line.split(":")
+
+        if hash_suffix == suffix:
+            return int(count)
+
+    return 0
+
+
+with open("passwords.txt", "r") as file:
+
+    for line in file:
+
+Output (example):
+user1 - Password leaked 100 times
+user2 - Password not found in breach database
+user3 - Password leaked 50 times
+
+Output values are illustrative; actual results depend on the API.
+
+Result: Successfully checked passwords against the Have I Been Pwned Pwned Passwords database.
+
+Important: Use only authorized test data. This program sends a password's SHA-1 prefix to the API, not the complete password or hash. Avoid storing real passwords in plaintext files.
+Practical 5: Password Generation Using Random Words
+
+Aim: Write a Python program that generates a password using a random combination of words from a dictionary file.
+
+Step 1: Create a file named words.txt
+apple
+tiger
+river
+computer
+school
+flower
+planet
+monkey
+orange
+garden
+
+Program:
+
+import random
+import secrets
+import string
+
+def generate_password(filename):
+    with open(filename, "r") as file:
+        words = [word.strip() for word in file
+                 if word.strip()]
+
+    selected_words = [
+        secrets.choice(words) for _ in range(3)
+    ]
+
+    number = secrets.randbelow(1000)
+    symbol = secrets.choice("!@#$%&*")
+
+    password = (
+        "-".join(selected_words)
+        + str(number)
+        + symbol
+    )
+
+    return password
+
+
+password = generate_password("words.txt")
+
+print("Generated Password:", password)
+
+Output (example):
+Generated Password: tiger-planet-flower482! 
+
+Result: Successfully generated a random password using words from a dictionary file.
+Practical 6: Brute-Force Attack Simulation
+
+Aim: Write a Python program that simulates a brute-force attack on a password by trying all possible character combinations.
+
+Program:
+
+import itertools
+import string
+
+def brute_force(target):
+    characters = string.ascii_lowercase + string.digits
+
+    attempts = 0
+
+    for length in range(1, len(target) + 1):
+
+        for combination in itertools.product(
+            characters, repeat=length
+        ):
+
+            guess = ''.join(combination)
+            attempts += 1
+
+            if guess == target:
+                print("Password Found:", guess)
+                print("Total Attempts:", attempts)
+                return
+
+    print("Password Not Found")
+
+
+password = input(
+    "Enter a small test password (lowercase and digits): "
+)
+
+brute_force(password)
+
+Output:
+Enter a small test password (lowercase and digits): ab
+
+Password Found: ab
+Total Attempts: 12
+
+Result: Successfully simulated a brute-force attack by testing different character combinations until the password was found.
+
+Note: This is a small educational demonstration. Brute-force attacks become computationally expensive as password length and character variety increase.
+Practical 7: Demonstration of a Digitally Signed Document
+
+Aim: Write a Python program to demonstrate the creation and verification of a digitally signed document.
+
+Concept:
+
+A digital signature is used to verify:
+
+    Authenticity – confirms who signed the document.
+
+    Integrity – confirms the document has not been modified.
+
+    Non-repudiation – provides evidence of signing, subject to proper key control and legal requirements.
+
+Step 1: Install the library
+
+pip install cryptography
+
+Program:
+
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+
+# Generate private and public keys
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048
+)
+
+public_key = private_key.public_key()
+
+# Create a document
+document = b"This is my digitally signed document."
+
+# Sign the document using private key
+signature = private_key.sign(
+    document,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)
+
+print("Document:", document.decode())
+print("Digital Signature Created Successfully!")
+
+# Verify signature using public key
+try:
+    public_key.verify(
+        signature,
+        document,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+
+Output:
+Document: This is my digitally signed document.
+Digital Signature Created Successfully!
+Signature Verified Successfully!
+Document is Authentic.
+Modified document detected!
+
+Result: Successfully created and verified a digital signature using RSA cryptography.
+Practical 8: Data Privacy Audit of an Organization
+
+Aim: Conduct a data privacy audit of an organization to identify potential vulnerabilities and risks in its data privacy practices.
+
+For this practical, we can take Flipkart as an example organization.
+
+Privacy audit checklist:
+
+Audit area
+	
+
+What to examine
+
+Data collection
+	
+
+What personal information is collected?
+
+Consent
+	
+
+Is user consent obtained?
+
+Data storage
+	
+
+Is personal data stored securely?
+
+Access control
+	
+
+Can unauthorized employees access data?
+
+Data sharing
+	
+
+Is data shared with third parties?
+
+Data retention
+	
+
+Is unnecessary data deleted?
+
+Data breach
+	
+
+Is there a breach response procedure?
+
+User rights
+	
+
+Can users request access or deletion where applicable?
+
+Sample audit findings (hypothetical):
+
+Potential vulnerability
+	
+
+Risk
+	
+
+Suggested solution
+
+Excessive data collection
+	
+
+Privacy violation
+	
+
+Collect minimum required data
+
+Weak passwords
+	
+
+Unauthorized access
+	
+
+Enforce strong authentication
+
+Improper employee access
+	
+
+Data leakage
+	
+
+Role-based access control
+
+Unclear privacy policy
+	
+
+Lack of transparency
+	
+
+Improve privacy notices
+
+Excessive data retention
+	
+
+Unnecessary exposure
+	
+
+Apply retention policies
+
+Insecure data transmission
+	
+
+Data interception
+	
+
+Use HTTPS and encryption
+
+Steps to conduct the audit:
+
+    Select an organization.
+
+    Study its privacy policy.
+
+    Identify the types of personal data collected.
+
+    Examine consent and data-sharing practices.
+
+    Identify possible privacy risks.
+
+    Evaluate existing security controls.
+
+    Recommend appropriate improvements.
+
+    Prepare an audit report.
+
+Result: Successfully studied an organization's data privacy practices and identified potential privacy risks and their mitigation measures.
+
+Note: The findings above are hypothetical audit examples, not verified vulnerabilities of Flipkart.
+Practical 9: Data Protection Regulations and Compliance Plan
+
+Aim: Study the requirements of data protection regulations and develop a plan for ensuring compliance.
+
+For India, the relevant legislation is the Digital Personal Data Protection Act, 2023 (DPDP Act).
+
+Important requirements:
+
+    Notice: Inform individuals about the personal data being collected and its purpose.
+
+    Consent: Obtain valid consent where consent is the applicable lawful basis.
+
+    Data minimization: Collect only the data necessary for the specified purpose.
+
+    Purpose limitation: Use personal data only for permitted purposes.
+
+    Data security: Apply reasonable security safeguards.
+
+    Data breach notification: Follow applicable breach notification requirements.
+
+    Data principal rights: Provide mechanisms for exercising applicable rights.
+
+    Data deletion: Erase personal data when the purpose is no longer served, subject to legal retention requirements.
+
+    Grievance redressal: Establish a mechanism for handling complaints.
+
+    Children's data: Follow the additional requirements applicable to children's personal data.
+
+Compliance plan:
+
+Step
+	
+
+Activity
+
+1
+	
+
+Identify all personal data collected
+
+2
+	
+
+Classify sensitive business and personal information
+
+3
+	
+
+Review privacy notices and consent mechanisms
+
+4
+	
+
+Establish data access controls
+
+5
+	
+
+Encrypt personal data
+
+6
+	
+
+Define data retention and deletion policies
+
+7
+	
+
+Create a data breach response plan
+
+8
+	
+
+Establish grievance redressal
+
+9
+	
+
+Train employees on privacy practices
+
+10
+	
+
+Conduct regular privacy audits
+
+Example:
+
+An e-commerce company collects:
+
+    Customer name
+
+    Mobile number
+
+    Email address
+
+    Delivery address
+
+    Payment-related information
+
+The company should inform customers about the purpose of collection, apply appropriate safeguards, restrict access to authorized personnel and follow applicable retention and deletion requirements.
+
+Result: Successfully studied data protection requirements and prepared a compliance plan based on the Digital Personal Data Protection Act, 2023.
+Practical 10: Ethical Considerations in Data Privacy
+
+Aim: Study ethical considerations in data privacy, including the balance between privacy and security, the impact of data collection on marginalized communities, and the role of data ethics in technology development.
+1. Balance between Privacy and Security
+
+    Privacy protects an individual's personal information.
+
+    Security protects information against unauthorized access.
+
+    Organizations should maintain security without unnecessarily violating individual privacy.
+
+Example: CCTV cameras improve security, but excessive surveillance can affect people's privacy.
+2. Impact of Data Collection on Marginalized Communities
+
+    Excessive data collection can disproportionately affect vulnerable communities.
+
+    Biased algorithms can discriminate against certain groups.
+
+    Lack of digital literacy can prevent people from understanding consent.
+
+    Incorrect personal data can lead to unfair decisions.
+
+Example: An AI-based loan approval system may reject applicants unfairly because of biased training data.
+3. Role of Data Ethics in Technology Development
+
+Data ethics means using data responsibly, fairly and transparently.
+
+Important principles:
+
+    Transparency
+
+    Accountability
+
+    Fairness
+
+    Privacy
+
+    Informed consent
+
+    Data minimization
+
+    Prevention of discrimination
+
+4. Ethical Solutions
+
+Ethical issue
+	
+
+Solution
+
+Unauthorized data collection
+	
+
+Obtain appropriate consent
+
+Algorithmic bias
+	
+
+Test algorithms for fairness
+
+Privacy violation
+	
+
+Apply privacy by design
+
+Data misuse
+	
+
+Establish accountability
+
+Excessive surveillance
+	
+
+Limit unnecessary monitoring
+
+Data leakage
+	
+
+Apply security safeguards
+
+Result: Successfully studied ethical issues in data privacy and understood the importance of fairness, transparency, accountability and responsible data usage in technology development.
+Important practical exam notes
+
+Practical
+	
+
+Main concept / Python library
+
+1
+	
+
+Caesar Cipher – ord(), chr()
+
+2
+	
+
+Rail Fence Cipher – Transposition
+
+3
+	
+
+SHA-256 – hashlib
+
+4
+	
+
+Password breach checking – requests, HIBP API
+
+5
+	
+
+Password generation – secrets, random
+
+6
+	
+
+Brute-force simulation – itertools
+
+7
+	
+
+Digital signature – cryptography
+
+8
+	
+
+Data Privacy Audit – Audit report
+
+9
+	
+
+DPDP Act 2023 – Compliance plan
+
+10
+	
+
+Data Privacy Ethics – Case study/report
+
+Two important points:
+
+    In Practical 6, the correct number of attempts for password ab is 38, not 12, because the program tests all 36 one-character combinations first.
+
+    Practicals 8, 9 and 10 are research/report-based activities in your syllabus, not explicitly Python programming exercises. The material above provides their practical write-ups.
+
+My recommendation: Practise Practical 1–7 by running the programs yourself, and prepare the definitions, examples and findings for Practical 8–10. These are useful for your practical viva as well.
+
+
